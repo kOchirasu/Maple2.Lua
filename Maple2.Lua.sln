@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple2.Lua", "Maple2.Lua\Maple2.Lua.csproj", "{A6BE3B0C-11F1-4489-871C-3B8CC1EE8150}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple2.Lua.Tests", "Maple2.Lua.Tests\Maple2.Lua.Tests.csproj", "{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6BE3B0C-11F1-4489-871C-3B8CC1EE8150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6BE3B0C-11F1-4489-871C-3B8CC1EE8150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6BE3B0C-11F1-4489-871C-3B8CC1EE8150}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6BE3B0C-11F1-4489-871C-3B8CC1EE8150}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
