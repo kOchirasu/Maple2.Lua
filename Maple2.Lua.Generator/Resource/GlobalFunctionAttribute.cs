@@ -4,5 +4,5 @@
 public class GlobalFunctionAttribute : Attribute {
     public GlobalFunctionAttribute() { }
     
-    public string Name { get; set; }
+    public string? Name { get; set; }
 }

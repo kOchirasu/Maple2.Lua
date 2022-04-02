@@ -20,25 +20,25 @@ public class LuaFunction {
             var builder = new StringBuilder();
             string @params = string.Join(", ", parameters.Select(p => $"{p.Type} {p.Name}"));
             builder.AppendLine($"public partial {returnType} {name}({@params}) {{");
-            builder.AppendLine($"    lua_getglobal(state, \"{luaFunctionName}\");");
+            builder.AppendLine($"    LuaGetGlobal(state, \"{luaFunctionName}\");");
             foreach (IParameterSymbol parameter in parameters) {
                 switch (ToLuaType(parameter.Type)) {
                     case "string":
-                        builder.AppendLine($"    lua_pushstring(state, {parameter.Name});");
+                        builder.AppendLine($"    LuaPushString(state, {parameter.Name});");
                         break;
                     case "number":
-                        builder.AppendLine($"    lua_pushnumber(state, {parameter.Name});");
+                        builder.AppendLine($"    LuaPushNumber(state, {parameter.Name});");
                         break;
                     case "boolean":
-                        builder.AppendLine($"    lua_pushboolean(state, {parameter.Name} ? 1 : 0);");
+                        builder.AppendLine($"    LuaPushBoolean(state, {parameter.Name} ? 1 : 0);");
                         break;
                 }
             }
             
             builder.AppendLine($@"
-    var code = lua_pcall(state, {parameters.Count}, -1, 0);
+    var code = LuaPCall(state, {parameters.Count}, -1, 0);
     if (code != 0) {{
-        string error = $""Error {{lua_status(state)}}|{{code}}: {{lua_tostring(state, -1)?.ToString()}}"";
+        string error = $""Error {{LuaStatus(state)}}|{{code}}: {{LuaToString(state, -1)?.ToString()}}"";
         throw new InvalidOperationException(error);
     }}
 ");
@@ -46,16 +46,16 @@ public class LuaFunction {
             if (returnType.Name != "Void") {
                 switch (ToLuaType(returnType)) {
                     case "string":
-                        builder.AppendLine("    var result = lua_tostring(state, -1).ToString();");
+                        builder.AppendLine("    var result = LuaToString(state, -1).ToString();");
                         break;
                     case "number":
-                        builder.AppendLine("    var result = lua_tonumber(state, -1);");
+                        builder.AppendLine("    var result = LuaToNumber(state, -1);");
                         break;
                     case "boolean":
-                        builder.AppendLine("    var result = lua_toboolean(state, -1);");
+                        builder.AppendLine("    var result = LuaToBoolean(state, -1);");
                         break;
                 }
-                builder.AppendLine("    lua_settop(state, 0); // Clear stack\n");
+                builder.AppendLine("    LuaSetTop(state, 0); // Clear stack\n");
                 builder.AppendLine($"    return ({returnType})result;");
             }
 

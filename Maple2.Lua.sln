@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple2.Lua", "Maple2.Lua\Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple2.Lua.Tests", "Maple2.Lua.Tests\Maple2.Lua.Tests.csproj", "{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple2.Lua.Generator", "Maple2.Lua.Generator\Maple2.Lua.Generator.csproj", "{277576EA-004F-4953-914E-67936849FDBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KopiLua", "KopiLua\KopiLua.csproj", "{E0BF8BA4-05FB-4035-A47D-83E21DECFD45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C901C171-D51D-4E97-9E2A-D5D48E1DCB9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{277576EA-004F-4953-914E-67936849FDBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{277576EA-004F-4953-914E-67936849FDBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{277576EA-004F-4953-914E-67936849FDBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{277576EA-004F-4953-914E-67936849FDBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0BF8BA4-05FB-4035-A47D-83E21DECFD45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0BF8BA4-05FB-4035-A47D-83E21DECFD45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0BF8BA4-05FB-4035-A47D-83E21DECFD45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0BF8BA4-05FB-4035-A47D-83E21DECFD45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
