@@ -37,9 +37,17 @@ public class LuaFunction {
             
             builder.AppendLine($@"
     var code = LuaPCall(state, {parameters.Count}, -1, 0);
-    if (code != 0) {{
-        string error = $""Error {{LuaStatus(state)}}|{{code}}: {{LuaToString(state, -1)?.ToString()}}"";
-        throw new InvalidOperationException(error);
+    switch (code) {{
+        case LUA_ERRRUN:
+            throw new ArgumentException($""LUA_ERRRUN: {{LuaToString(state, -1)?.ToString()}}"");
+        case LUA_ERRMEM:
+            throw new OutOfMemoryException(""LUA_ERRMEM: memory allocation error"");
+        case LUA_ERRERR:
+            throw new InvalidOperationException(""LUA_ERRERR: failed to handle error"");
+        case 0:
+            break; // OK
+        default:
+            throw new InvalidOperationException($""Internal error code: {{code}}"");
     }}
 ");
 

@@ -23,7 +23,15 @@ namespace KopiLua
 			Debug.Assert(pc.codes == p.code);
 			return pc.pc - 1;
 		}
-		public static int GetLine(Proto f, int pc) { return (f.lineinfo != null) ? f.lineinfo[pc] : 0; }
+
+		public static int GetLine(Proto f, int pc)
+		{
+			if (f.lineinfo != null && pc >= 0 && pc < f.lineinfo.Length) {
+				return f.lineinfo[pc];
+			}
+
+			return 0;
+		}
 		public static void ResetHookCount(LuaState L) { L.hookcount = L.basehookcount; }
 
 

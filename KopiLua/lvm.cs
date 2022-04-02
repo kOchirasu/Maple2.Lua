@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using System.Linq;
 
 namespace KopiLua
 {
@@ -117,6 +118,15 @@ namespace KopiLua
 			if (TTIsTable(t)) {  /* `t' is a table? */
 			  Table h = HValue(t);
 			  TValue res = luaH_get(h, key); /* do a primitive get */
+#if !CATCH_EXCEPTIONS
+              if (key.tt == LUA_TNUMBER && res == LuaONilObject) {
+	              IEnumerable<double> idxs = h.node.Select(key2tval)
+		            .Where(v => v.tt == LUA_TNUMBER)
+		            .Select(v => v.value.n)
+		            .OrderBy(n => n);
+	            throw new ArgumentException($"invalid index {key.value.n} in table {{{string.Join(", ", idxs)}}}");
+              }
+#endif
 			  if (!TTIsNil(res) ||  /* result is no nil? */
 				  (tm = fasttm(L, h.metatable, TMS.TM_INDEX)) == null) { /* or no TM? */
 				SetObj2S(L, val, res);

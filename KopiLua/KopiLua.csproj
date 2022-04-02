@@ -8,7 +8,7 @@
         <DebugSymbols>True</DebugSymbols>
         <DebugType>full</DebugType>
         <Optimize>False</Optimize>
-        <DefineConstants>TRACE;DEBUG;LUA_CORE;CATCH_EXCEPTIONS</DefineConstants>
+        <DefineConstants>TRACE;DEBUG;LUA_CORE</DefineConstants>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
