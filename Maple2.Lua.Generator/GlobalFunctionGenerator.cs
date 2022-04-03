@@ -42,7 +42,7 @@ public class GlobalFunctionGenerator : ISourceGenerator {
             .GroupBy(method => method.ContainingType, SymbolEqualityComparer.Default);
 
         foreach (IGrouping<ISymbol, IMethodSymbol> group in classGroups) {
-            var hintName = new StringBuilder($"[{group.Key.ContainingNamespace.Name}]");
+            var hintName = new StringBuilder();
             foreach (INamedTypeSymbol containingType in group.Key.ContainingTypes()) {
                 hintName.Append($"{containingType.Name}.");
             }

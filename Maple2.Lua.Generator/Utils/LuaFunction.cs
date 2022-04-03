@@ -66,37 +66,37 @@ public class LuaFunction : IDisposable {
 ");
 
         if (returnType.Name != "Void") {
-            var types = new Stack<ITypeSymbol>();
+            var types = new List<ITypeSymbol>();
             if (returnType.IsTupleType && returnType is INamedTypeSymbol tupleType) {
                 foreach (IFieldSymbol element in tupleType.TupleElements) {
-                    types.Push(element.Type);
+                    types.Add(element.Type);
                 }
             } else {
-                types.Push(returnType);
+                types.Add(returnType);
             }
             
             var vars = new List<string>(types.Count);
-            int i = 1;
-            while (types.TryPop(out ITypeSymbol type)) {
+            for (int i = 1; i <= types.Count; i++) {
+                ITypeSymbol type = types[i - 1];
                 if (type.NullableAnnotation == NullableAnnotation.Annotated) {
                     writer.WriteLine($"{type} result{i} = null;");
-                    writer.WriteLine("if (LuaGetTop(state) >= 1) {");
+                    writer.WriteLine($"if (LuaGetTop(state) >= {i}) {{");
                     writer.Indent++;
                 } else {
                     writer.WriteLine($"{type} result{i};");
                 }
                 switch (ToLuaType(type)) {
                     case "string":
-                        writer.WriteLine($"result{i} = LuaToString(state, -{i}).ToString();");
+                        writer.WriteLine($"result{i} = LuaToString(state, {i}).ToString();");
                         break;
                     case "number":
-                        writer.WriteLine($"result{i} = ({type})LuaToNumber(state, -{i});");
+                        writer.WriteLine($"result{i} = ({type})LuaToNumber(state, {i});");
                         break;
                     case "integer":
-                        writer.WriteLine($"result{i} = ({type})LuaToInteger(state, -{i});");
+                        writer.WriteLine($"result{i} = ({type})LuaToInteger(state, {i});");
                         break;
                     case "boolean":
-                        writer.WriteLine($"result{i} = LuaToBoolean(state, -{i});");
+                        writer.WriteLine($"result{i} = LuaToBoolean(state, {i});");
                         break;
                 }
                 if (type.NullableAnnotation == NullableAnnotation.Annotated) {
@@ -105,10 +105,8 @@ public class LuaFunction : IDisposable {
                 }
 
                 vars.Add($"result{i}");
-                i++;
             }
 
-            vars.Reverse();
             writer.WriteLine("LuaSetTop(state, 0); // Clear stack\n");
             writer.WriteLine($"return ({string.Join(", ", vars)});");
         }
