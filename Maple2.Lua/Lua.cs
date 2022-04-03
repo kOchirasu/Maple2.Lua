@@ -5,9 +5,11 @@ using static KopiLua.Lua;
 namespace Maple2.Lua;
 
 public partial class Lua : IDisposable {
-    private LuaState state;
+    private const string RESOURCE_NAME = "Maple2.Lua.luapack.o";
     
-    public Lua(string filename, string locale) {
+    private readonly LuaState state;
+    
+    public Lua(string locale) {
         state = LuaOpen();
         if (state == null) {
             throw new NullReferenceException("Failed to call lua_open");
@@ -15,9 +17,13 @@ public partial class Lua : IDisposable {
         
         LuaLOpenLibs(state);
         // sub_5B0490 - mapping: print, printErr, printWarn, printError to functions
-
-        if (LuaLLoadFile(state, filename) != 0) {
-            throw new FileLoadException($"Failed to load {filename}");
+        
+        // Load embedded resource
+        var lf = new LoadF {
+            f = typeof(Lua).Assembly.GetManifestResourceStream(RESOURCE_NAME)
+        };
+        if (LuaLoad(state, GetF, lf, LuaToString(state, -1)) != 0) {
+            throw new FileLoadException($"Failed to load {RESOURCE_NAME}");
         }
         
         // Initialize function definitions
