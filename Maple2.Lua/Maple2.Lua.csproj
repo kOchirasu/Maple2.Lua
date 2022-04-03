@@ -9,14 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Update="luapack.o">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+      <ProjectReference Include="..\KopiLua\KopiLua.csproj" />
+      <ProjectReference Include="..\Maple2.Lua.Generator\Maple2.Lua.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\KopiLua\KopiLua.csproj" />
-      <ProjectReference Include="..\Maple2.Lua.Generator\Maple2.Lua.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+      <None Update="luapack.o">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
