@@ -1306,11 +1306,14 @@ namespace KopiLua
 						if (!File.Exists(str))
 							return null;
 						break;
-
 					case 'w':
 						filemode = FileMode.Create;
 						fileaccess = fileaccess | FileAccess.Write;
 						break;
+					case 'a':
+						filemode = FileMode.Append;
+						fileaccess = fileaccess | FileAccess.Write;
+						break;	
 				}
 			try
 			{
@@ -1359,7 +1362,14 @@ namespace KopiLua
 
 		public static int fscanf(Stream f, CharPtr format, params object[] argp)
 		{
-			string str = Console.ReadLine();
+			StringBuilder sb = new StringBuilder();
+			int c;
+			//we should be transforming \r\n to \n before we get here, but that isn't done
+			while ((c = f.ReadByte()) != -1 && c != '\n')
+			{
+				sb.Append((char)c);
+			}
+			string str = sb.ToString();
 			return parse_scanf(str, format, argp);
 		}
 		
