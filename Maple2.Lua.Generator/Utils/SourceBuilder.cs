@@ -22,7 +22,10 @@ internal class SourceBuilder {
             builder.AppendLine($"using {import};");
         }
 
-        builder.AppendLine($"namespace {@namespace.ToDisplayString()} {{");
+        if (!@namespace.IsGlobalNamespace) {
+            builder.AppendLine($"namespace {@namespace.ToDisplayString()} {{");
+        }
+        
         foreach (string @class in Classes) {
             builder.AppendLine($"public partial class {@class} {{");
         }
@@ -36,7 +39,10 @@ internal class SourceBuilder {
             builder.AppendLine("}");
         }
 
-        builder.AppendLine("}"); // namespace
+        if (!@namespace.IsGlobalNamespace) {
+            builder.AppendLine("}"); // namespace
+        }
+        
         return builder.ToString();
     }
 }

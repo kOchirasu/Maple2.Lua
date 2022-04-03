@@ -1,90 +1,145 @@
-﻿using System.Text;
+﻿using System.CodeDom.Compiler;
 using Microsoft.CodeAnalysis;
 
 namespace Maple2.Lua.Generator.Utils; 
 
-public class LuaFunction {
-        private readonly string name;
-        private readonly ITypeSymbol returnType;
-        private readonly IList<IParameterSymbol> parameters;
-        private readonly string luaFunctionName;
+public class LuaFunction : IDisposable {
+    private readonly string name;
+    private readonly ITypeSymbol returnType;
+    private readonly IList<IParameterSymbol> parameters;
+    private readonly string luaFunctionName;
 
-        public LuaFunction(IMethodSymbol method, string luaName) {
-            name = method.Name;
-            returnType = method.ReturnType;
-            parameters = method.Parameters;
-            luaFunctionName = luaName;
-        }
+    private readonly StringWriter output;
+    private readonly IndentedTextWriter writer;
 
-        public override string ToString() {
-            var builder = new StringBuilder();
-            string @params = string.Join(", ", parameters.Select(p => $"{p.Type} {p.Name}"));
-            builder.AppendLine($"public partial {returnType} {name}({@params}) {{");
-            builder.AppendLine($"    LuaGetGlobal(state, \"{luaFunctionName}\");");
-            foreach (IParameterSymbol parameter in parameters) {
-                switch (ToLuaType(parameter.Type)) {
-                    case "string":
-                        builder.AppendLine($"    LuaPushString(state, {parameter.Name});");
-                        break;
-                    case "number":
-                        builder.AppendLine($"    LuaPushNumber(state, {parameter.Name});");
-                        break;
-                    case "boolean":
-                        builder.AppendLine($"    LuaPushBoolean(state, {parameter.Name} ? 1 : 0);");
-                        break;
-                }
+    public LuaFunction(IMethodSymbol method, string luaName) {
+        name = method.Name;
+        returnType = method.ReturnType;
+        parameters = method.Parameters;
+        luaFunctionName = luaName;
+        
+        output = new StringWriter();
+        writer = new IndentedTextWriter(output, "    ");
+        Build();
+    }
+
+    public override string ToString() {
+        return output.ToString();
+    }
+
+    private void Build() {
+        string @params = string.Join(", ", parameters.Select(p => $"{p.Type} {p.Name}"));
+        writer.WriteLine($"public partial {returnType} {name}({@params}) {{");
+        writer.Indent++;
+        writer.WriteLine($"LuaGetGlobal(state, \"{luaFunctionName}\");");
+        foreach (IParameterSymbol parameter in parameters) {
+            switch (ToLuaType(parameter.Type)) {
+                case "string":
+                    writer.WriteLine($"LuaPushString(state, {parameter.Name});");
+                    break;
+                case "number":
+                    writer.WriteLine($"LuaPushNumber(state, {parameter.Name});");
+                    break;
+                case "integer":
+                    writer.WriteLine($"LuaPushInteger(state, {parameter.Name});");
+                    break;
+                case "boolean":
+                    writer.WriteLine($"LuaPushBoolean(state, {parameter.Name} ? 1 : 0);");
+                    break;
             }
-            
-            builder.AppendLine($@"
+        }
+        
+        writer.WriteLine($@"
     var code = LuaPCall(state, {parameters.Count}, -1, 0);
     switch (code) {{
         case LUA_ERRRUN:
-            throw new ArgumentException($""LUA_ERRRUN: {{LuaToString(state, -1)?.ToString()}}"");
+            throw new ArgumentException($""LUA_ERRRUN({name}): {{LuaToString(state, -1)?.ToString()}}"");
         case LUA_ERRMEM:
-            throw new OutOfMemoryException(""LUA_ERRMEM: memory allocation error"");
+            throw new OutOfMemoryException(""LUA_ERRMEM({name}): memory allocation error"");
         case LUA_ERRERR:
-            throw new InvalidOperationException(""LUA_ERRERR: failed to handle error"");
+            throw new InvalidOperationException(""LUA_ERRERR({name}): failed to handle error"");
         case 0:
             break; // OK
         default:
-            throw new InvalidOperationException($""Internal error code: {{code}}"");
+            throw new InvalidOperationException($""{name} - Internal error code: {{code}}"");
     }}
 ");
 
-            if (returnType.Name != "Void") {
-                switch (ToLuaType(returnType)) {
+        if (returnType.Name != "Void") {
+            var types = new Stack<ITypeSymbol>();
+            if (returnType.IsTupleType && returnType is INamedTypeSymbol tupleType) {
+                foreach (IFieldSymbol element in tupleType.TupleElements) {
+                    types.Push(element.Type);
+                }
+            } else {
+                types.Push(returnType);
+            }
+            
+            var vars = new List<string>(types.Count);
+            int i = 1;
+            while (types.TryPop(out ITypeSymbol type)) {
+                if (type.NullableAnnotation == NullableAnnotation.Annotated) {
+                    writer.WriteLine($"{type} result{i} = null;");
+                    writer.WriteLine("if (LuaGetTop(state) >= 1) {");
+                    writer.Indent++;
+                } else {
+                    writer.WriteLine($"{type} result{i};");
+                }
+                switch (ToLuaType(type)) {
                     case "string":
-                        builder.AppendLine("    var result = LuaToString(state, -1).ToString();");
+                        writer.WriteLine($"result{i} = LuaToString(state, -{i}).ToString();");
                         break;
                     case "number":
-                        builder.AppendLine("    var result = LuaToNumber(state, -1);");
+                        writer.WriteLine($"result{i} = ({type})LuaToNumber(state, -{i});");
+                        break;
+                    case "integer":
+                        writer.WriteLine($"result{i} = ({type})LuaToInteger(state, -{i});");
                         break;
                     case "boolean":
-                        builder.AppendLine("    var result = LuaToBoolean(state, -1);");
+                        writer.WriteLine($"result{i} = LuaToBoolean(state, -{i});");
                         break;
                 }
-                builder.AppendLine("    LuaSetTop(state, 0); // Clear stack\n");
-                builder.AppendLine($"    return ({returnType})result;");
+                if (type.NullableAnnotation == NullableAnnotation.Annotated) {
+                    writer.Indent--;
+                    writer.WriteLine("}");
+                }
+
+                vars.Add($"result{i}");
+                i++;
             }
 
-            builder.AppendLine("}");
-            return builder.ToString();
+            vars.Reverse();
+            writer.WriteLine("LuaSetTop(state, 0); // Clear stack\n");
+            writer.WriteLine($"return ({string.Join(", ", vars)});");
         }
 
-        private string ToLuaType(ITypeSymbol type) {
-            switch (type.Name) {
-                case "String":
-                    return "string";
-                case "Single": case "Double":
-                case "Byte": case "SByte":
-                case "Int16": case "UInt16":
-                case "Int32": case "UInt32":
-                case "Int64": case "UInt64":
-                    return "number";
-                case "Boolean":
-                    return "boolean";
-                default:
-                    throw new Exception($"invalid lua type: \"{type.Name}\"");
-            }
+        writer.Indent--;
+        writer.WriteLine("}");
+    }
+
+    private static string ToLuaType(ITypeSymbol type) {
+        if (type.NullableAnnotation == NullableAnnotation.Annotated && type is INamedTypeSymbol nullableType) {
+            type = nullableType.TypeArguments.FirstOrDefault(nullableType.ConstructedFrom);
+        }
+        switch (type.Name) {
+            case "String":
+                return "string";
+            case "Single": case "Double":
+            case "Int64": case "UInt64":
+                return "number";
+            case "Byte": case "SByte":
+            case "Int16": case "UInt16":
+            case "Int32": case "UInt32":
+                return "integer";
+            case "Boolean":
+                return "boolean";
+            default:
+                throw new Exception($"invalid lua type: \"{type.Name}\"");
         }
     }
+
+    public void Dispose() {
+        writer?.Dispose();
+        output?.Dispose();
+    }
+}

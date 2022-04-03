@@ -19,4 +19,8 @@
       <EmbeddedResource Include="Resource\GlobalFunctionAttribute.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\KopiLua\KopiLua.csproj" />
+    </ItemGroup>
+
 </Project>
