@@ -4,49 +4,64 @@ namespace Maple2.Lua;
 
 public partial class Lua {
     #region Stats
+    /// <param name="moveSpeed">movement speed value</param>
+    /// <returns>movement speed rate</returns>
     [GlobalFunction(Name = "calc_msiR")]
-    public partial float CalcMsiRate(long a0); // int a1 in IDA (ignored)
+    public partial float CalcMoveSpeed(long moveSpeed); // int a1 in IDA (ignored)
     
+    /// <param name="moveSpeed">movement speed value</param>
+    /// <returns>movement speed rate</returns>
+    /// <remarks>same as calc_msiR (CalcMoveSpeed)</remarks>
     [GlobalFunction(Name = "calc_rmsiR")]
-    public partial float CalcRmsiRate(long a0);
+    public partial float CalcRMoveSpeed(long moveSpeed);
     
+    /// <param name="jumpHeight">jump value</param>
+    /// <returns>jump rate</returns>
     [GlobalFunction(Name = "calc_jmiR")]
-    public partial float CalcJmiRate(long a0 = 0);
+    public partial float CalcJumpHeight(long jumpHeight);
     
-    /// <param name="rate">The additional rate over 100%. This value is divided by 1000</param>
-    /// <param name="mode">If mode == 14, the cap is raised to 500%</param>
-    /// <returns>
-    /// CritDamage is normally capped at 2.5 (250%), if mode == 14, the is raised to 5.0 (500%)
-    /// </returns>
+    /// <param name="critDamage">The additional rate over 100%. This value is divided by 1000</param>
+    /// <param name="mode">If mode == 14, cap is raised to 500%</param>
+    /// <returns>critical damage</returns>
+    /// <remarks>Capped at 2.5 (250%). If mode == 14, cap is raised to 5.0 (500%)</remarks>
     [GlobalFunction(Name = "calc_cad")]
-    public partial float CalcCritDamage(float rate, int mode = 0);
+    public partial float CalcCritDamage(float critDamage, int mode = 0);
     
     /// <param name="rate">The attack speed. This value is divided by 100</param>
-    /// <param name="multiplier">Multiply the final result, not affected by the cap</param>
+    /// <param name="sequenceSpeed">Multiply the final result, not affected by the cap</param>
     /// <param name="mode">If mode == 14, the cap is raised to 300%</param>
-    /// <returns>
-    /// AttackSpeed is normally capped at 1.5 (150%), if mode == 14, the is raised to 3.0 (300%)
-    /// </returns>
+    /// <returns>attack speed rate</returns>
+    /// <remarks>Capped at 1.5 (150%), If mode == 14, cap is raised to 3.0 (300%)</remarks>
     [GlobalFunction(Name = "calc_pc_asiR")]
-    public partial float CalcPlayerAttackSpeed(long rate, float multiplier, int mode = 0);
+    public partial float CalcPlayerAttackSpeed(long rate, float sequenceSpeed, int mode = 0);
     
     /// <param name="rate">The attack speed. This value is divided by 100</param>
-    /// <param name="multiplier">Multiply the final result</param>
+    /// <param name="sequenceSpeed">Multiply the final result</param>
+    /// <returns>attack speed rate</returns>
     [GlobalFunction(Name = "calc_npc_asiR")]
-    public partial float CalcNpcAttackSpeed(long rate, float multiplier);
+    public partial float CalcNpcAttackSpeed(long rate, float sequenceSpeed);
 
+    /// <param name="luk">luck</param>
+    /// <param name="critRate">critical rate</param>
+    /// <param name="critResist">critical resistance</param>
+    /// <returns>npc critical rate</returns>
     [GlobalFunction(Name = "calc_npc_cap")]
-    public partial float CalcNpcCritRate(long a0, long a1, long a2);
+    public partial float CalcNpcCritRate(long luk, long critRate, long critResist);
     
+    /// <param name="jobCode">job code</param>
+    /// <param name="luk">luck</param>
+    /// <param name="critRate">critical rate</param>
+    /// <param name="critResist">critical resistance</param>
+    /// <param name="finalCapV">unused</param>
+    /// <param name="finalCapR">unused</param>
     /// <param name="mode">If mode == 14, the cap is raised to 90%</param>
-    /// <returns>
-    /// CritRate is normally capped at 0.4 (40%), if mode == 14, the is raised to 0.9 (90%)
-    /// </returns>
+    /// <returns>player critical rate</returns>
+    /// <remarks>Capped at 0.4 (40%). If mode == 14, cap is raised to 0.9 (90%)</remarks>
     [GlobalFunction(Name = "calc_pc_cap")]
-    public partial float CalcPlayerCritRate(int a0, long a1, long a2, long a3, long a4, float a5, int mode = 0);
+    public partial float CalcPlayerCritRate(int jobCode, long luk, long critRate, long critResist, long finalCapV, float finalCapR, int mode = 0);
     
     [GlobalFunction(Name = "calc_pc_damage")]
-    public partial long CalcPlayerDamage(long a0, long a1, long a2, float a3, float cap);
+    public partial long CalcPlayerDamage(long a0, long a1, long a2, float a3, float a4);
     
     [GlobalFunction(Name = "cale_pc_OffenseScore")]
     public partial long CalcPlayerOffenseScore(
@@ -80,30 +95,65 @@ public partial class Lua {
     public partial long CalcBlackMarketRegisterDepositMax();
     #endregion
     
+    /// <param name="level"></param>
+    /// <param name="penaltyCount"></param>
+    /// <param name="mode">either 0 or 1</param>
+    /// <returns>respawn penalty cost</returns>
     [GlobalFunction(Name = "calcResolvePaneltyPrice")]
-    public partial int CalcResolvePenaltyPrice(ushort level, int a1, int zero_or_one);
+    public partial int CalcResolvePenaltyPrice(ushort level, int penaltyCount, int mode);
     
+    #region Kill Count
+    /// <param name="killCount">kill count</param>
+    /// <returns>continuous kill count bonus exp</returns>
     [GlobalFunction(Name = "calcKillCountBonusExpRate")]
     public partial float CalcKillCountBonusExpRate(int killCount);
     
+    /// <param name="killCount">kill count</param>
+    /// <returns>continuous kill count grade</returns>
     [GlobalFunction(Name = "calcKillCountGrade")]
     public partial int CalcKillCountGrade(int killCount);
     
+    /// <param name="killCount">kill count</param>
+    /// <returns>kill count message</returns>
     [GlobalFunction(Name = "calcKillCountMsg")]
     public partial string CalcKillCountMsg(int killCount);
     
+    /// <param name="myLevel">level of player</param>
+    /// <param name="targetLevel">level of target (npc)</param>
+    /// <param name="timeElapsed">time since last kill</param>
+    /// <param name="killCount">previous kill count</param>
+    /// <returns>kill count</returns>
     [GlobalFunction(Name = "calcKillCount")]
-    public partial int CalcKillCount(ushort npcLevel, ushort pcLevel, int timeElapsed, int killCount); // a2 is absolute value from IDA?
+    #endregion
+    public partial int CalcKillCount(ushort myLevel, ushort targetLevel, int timeElapsed, int killCount); // a2 is absolute value from IDA?
     
+    /// <param name="meso">amount of mesos attached</param>
+    /// <param name="normalItemCount">number of NORMAL (grade=1) items attached</param>
+    /// <param name="rareItemCount">number of RARE (grade=2) items attached</param>
+    /// <param name="eliteItemCount">number of ELITE (grade=3) items attached</param>
+    /// <param name="excellentItemCount">number of EXCELLENT (grade=4) items attached</param>
+    /// <param name="legendaryItemCount">number of LEGENDARY (grade=5) items attached</param>
+    /// <param name="epicItemCount">number of EPIC (grade=6) items attached</param>
+    /// <returns>send mail fee</returns>
     [GlobalFunction(Name = "calcSendMailFee")]
-    public partial long CalcSendMailFee(long a0, long a1, long a2, long a3, long a4, long a5, long a6);
+    public partial long CalcSendMailFee(long meso, long normalItemCount, long rareItemCount, long eliteItemCount, long excellentItemCount, long legendaryItemCount, long epicItemCount);
     
+    /// <param name="mainTagCount"></param>
+    /// <param name="subTagCount"></param>
+    /// <param name="rareDegree"></param>
+    /// <param name="difficultyDiff"></param>
+    /// <returns>monster auto-spawn weight</returns>
     [GlobalFunction(Name = "calcNpcSpawnWeight")]
-    public partial int CalcNpcSpawnWeight(int a0, int a1, int a2, int a3);
+    public partial int CalcNpcSpawnWeight(int mainTagCount, int subTagCount, int rareDegree, int difficultyDiff);
     
+    /// <param name="distance">number of maps to traverse</param>
+    /// <param name="level">player level</param>
+    /// <returns>taxi charge</returns>
     [GlobalFunction(Name = "calcTaxiCharge")]
-    public partial int CalcTaxiCharge(int mapCount, ushort level);
+    public partial int CalcTaxiCharge(int distance, ushort level);
     
+    /// <param name="level">player level</param>
+    /// <returns>air taxi charge</returns>
     [GlobalFunction(Name = "calcAirTaxiCharge")]
     public partial int CalcAirTaxiCharge(ushort level);
     
