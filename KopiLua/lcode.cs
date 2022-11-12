@@ -95,17 +95,17 @@ namespace KopiLua
 		public enum UnOpr { OPR_MINUS, OPR_NOT, OPR_LEN, OPR_NOUNOPR };
 
 
-		public static InstructionPtr GetCode(FuncState fs, expdesc e)	{return new InstructionPtr(fs.f.code, e.u.s.info);}
+		public static InstructionPtr GetCode(FuncState fs, ExpDesc e)	{return new InstructionPtr(fs.f.code, e.u.s.info);}
 
 		public static int LuaKCodeAsBx(FuncState fs, OpCode o, int A, int sBx)	{return LuaKCodeABx(fs,o,A,sBx+MAXARG_sBx);}
 
-		public static void LuaKSetMultRet(FuncState fs, expdesc e)	{LuaKSetReturns(fs, e, LUA_MULTRET);}
+		public static void LuaKSetMultRet(FuncState fs, ExpDesc e)	{LuaKSetReturns(fs, e, LUA_MULTRET);}
 
-		public static bool HasJumps(expdesc e)	{return e.t != e.f;}
+		public static bool HasJumps(ExpDesc e)	{return e.t != e.f;}
 
 
-		private static int IsNumeral(expdesc e) {
-		  return (e.k == expkind.VKNUM && e.t == NO_JUMP && e.f == NO_JUMP) ? 1 : 0;
+		private static int IsNumeral(ExpDesc e) {
+		  return (e.k == ExpKind.VKNUM && e.t == NO_JUMP && e.f == NO_JUMP) ? 1 : 0;
 		}
 
 
@@ -297,8 +297,8 @@ namespace KopiLua
 		}
 
 
-		private static void FreeExp (FuncState fs, expdesc e) {
-		  if (e.k == expkind.VNONRELOC)
+		private static void FreeExp (FuncState fs, ExpDesc e) {
+		  if (e.k == ExpKind.VNONRELOC)
 			FreeReg(fs, e.u.s.info);
 		}
 
@@ -354,11 +354,11 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKSetReturns (FuncState fs, expdesc e, int nresults) {
-		  if (e.k == expkind.VCALL) {  /* expression is an open function call? */
+		public static void LuaKSetReturns (FuncState fs, ExpDesc e, int nresults) {
+		  if (e.k == ExpKind.VCALL) {  /* expression is an open function call? */
 			SETARG_C(GetCode(fs, e), nresults+1);
 		  }
-		  else if (e.k == expkind.VVARARG) {
+		  else if (e.k == ExpKind.VVARARG) {
 			SETARG_B(GetCode(fs, e), nresults+1);
 			SETARG_A(GetCode(fs, e), fs.freereg);
 			LuaKReserveRegs(fs, 1);
@@ -366,43 +366,43 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKSetOneRet (FuncState fs, expdesc e) {
-		  if (e.k == expkind.VCALL) {  /* expression is an open function call? */
-			e.k = expkind.VNONRELOC;
+		public static void LuaKSetOneRet (FuncState fs, ExpDesc e) {
+		  if (e.k == ExpKind.VCALL) {  /* expression is an open function call? */
+			e.k = ExpKind.VNONRELOC;
 			e.u.s.info = GETARG_A(GetCode(fs, e));
 		  }
-		  else if (e.k == expkind.VVARARG) {
+		  else if (e.k == ExpKind.VVARARG) {
 			SETARG_B(GetCode(fs, e), 2);
-			e.k = expkind.VRELOCABLE;  /* can relocate its simple result */
+			e.k = ExpKind.VRELOCABLE;  /* can relocate its simple result */
 		  }
 		}
 
 
-		public static void LuaKDischargeVars (FuncState fs, expdesc e) {
+		public static void LuaKDischargeVars (FuncState fs, ExpDesc e) {
 		  switch (e.k) {
-			case expkind.VLOCAL: {
-			  e.k = expkind.VNONRELOC;
+			case ExpKind.VLOCAL: {
+			  e.k = ExpKind.VNONRELOC;
 			  break;
 			}
-			case expkind.VUPVAL: {
+			case ExpKind.VUPVAL: {
 			  e.u.s.info = LuaKCodeABC(fs, OpCode.OP_GETUPVAL, 0, e.u.s.info, 0);
-			  e.k = expkind.VRELOCABLE;
+			  e.k = ExpKind.VRELOCABLE;
 			  break;
 			}
-			case expkind.VGLOBAL: {
+			case ExpKind.VGLOBAL: {
 				e.u.s.info = LuaKCodeABx(fs, OpCode.OP_GETGLOBAL, 0, e.u.s.info);
-			  e.k = expkind.VRELOCABLE;
+			  e.k = ExpKind.VRELOCABLE;
 			  break;
 			}
-			case expkind.VINDEXED: {
+			case ExpKind.VINDEXED: {
 			  FreeReg(fs, e.u.s.aux);
 			  FreeReg(fs, e.u.s.info);
 			  e.u.s.info = LuaKCodeABC(fs, OpCode.OP_GETTABLE, 0, e.u.s.info, e.u.s.aux);
-			  e.k = expkind.VRELOCABLE;
+			  e.k = ExpKind.VRELOCABLE;
 			  break;
 			}
-			case expkind.VVARARG:
-			case expkind.VCALL: {
+			case ExpKind.VVARARG:
+			case ExpKind.VCALL: {
 			  LuaKSetOneRet(fs, e);
 			  break;
 			}
@@ -417,63 +417,63 @@ namespace KopiLua
 		}
 
 
-		private static void Discharge2Reg (FuncState fs, expdesc e, int reg) {
+		private static void Discharge2Reg (FuncState fs, ExpDesc e, int reg) {
 		  LuaKDischargeVars(fs, e);
 		  switch (e.k) {
-			case expkind.VNIL: {
+			case ExpKind.VNIL: {
 			  LuaKNil(fs, reg, 1);
 			  break;
 			}
-			case expkind.VFALSE:  case expkind.VTRUE: {
-				LuaKCodeABC(fs, OpCode.OP_LOADBOOL, reg, (e.k == expkind.VTRUE) ? 1 : 0, 0);
+			case ExpKind.VFALSE:  case ExpKind.VTRUE: {
+				LuaKCodeABC(fs, OpCode.OP_LOADBOOL, reg, (e.k == ExpKind.VTRUE) ? 1 : 0, 0);
 			  break;
 			}
-			case expkind.VK: {
+			case ExpKind.VK: {
 			  LuaKCodeABx(fs, OpCode.OP_LOADK, reg, e.u.s.info);
 			  break;
 			}
-			case expkind.VKNUM: {
+			case ExpKind.VKNUM: {
 			  LuaKCodeABx(fs, OpCode.OP_LOADK, reg, LuaKNumberK(fs, e.u.nval));
 			  break;
 			}
-			case expkind.VRELOCABLE: {
+			case ExpKind.VRELOCABLE: {
 			  InstructionPtr pc = GetCode(fs, e);
 			  SETARG_A(pc, reg);
 			  break;
 			}
-			case expkind.VNONRELOC: {
+			case ExpKind.VNONRELOC: {
 			  if (reg != e.u.s.info)
 				LuaKCodeABC(fs, OpCode.OP_MOVE, reg, e.u.s.info, 0);
 			  break;
 			}
 			default: {
-			  LuaAssert(e.k == expkind.VVOID || e.k == expkind.VJMP);
+			  LuaAssert(e.k == ExpKind.VVOID || e.k == ExpKind.VJMP);
 			  return;  /* nothing to do... */
 			}
 		  }
 		  e.u.s.info = reg;
-		  e.k = expkind.VNONRELOC;
+		  e.k = ExpKind.VNONRELOC;
 		}
 
 
-		private static void Discharge2AnyReg (FuncState fs, expdesc e) {
-		  if (e.k != expkind.VNONRELOC) {
+		private static void Discharge2AnyReg (FuncState fs, ExpDesc e) {
+		  if (e.k != ExpKind.VNONRELOC) {
 			LuaKReserveRegs(fs, 1);
 			Discharge2Reg(fs, e, fs.freereg-1);
 		  }
 		}
 
 
-		private static void Exp2Reg (FuncState fs, expdesc e, int reg) {
+		private static void Exp2Reg (FuncState fs, ExpDesc e, int reg) {
 		  Discharge2Reg(fs, e, reg);
-		  if (e.k == expkind.VJMP)
+		  if (e.k == ExpKind.VJMP)
 			LuaKConcat(fs, ref e.t, e.u.s.info);  /* put this jump in `t' list */
 		  if (HasJumps(e)) {
 			int final;  /* position after whole expression */
 			int p_f = NO_JUMP;  /* position of an eventual LOAD false */
 			int p_t = NO_JUMP;  /* position of an eventual LOAD true */
 			if (NeedValue(fs, e.t)!=0 || NeedValue(fs, e.f)!=0) {
-			  int fj = (e.k == expkind.VJMP) ? NO_JUMP : LuaKJump(fs);
+			  int fj = (e.k == ExpKind.VJMP) ? NO_JUMP : LuaKJump(fs);
 			  p_f = CodeLabel(fs, reg, 0, 1);
 			  p_t = CodeLabel(fs, reg, 1, 0);
 			  LuaKPatchToHere(fs, fj);
@@ -484,11 +484,11 @@ namespace KopiLua
 		  }
 		  e.f = e.t = NO_JUMP;
 		  e.u.s.info = reg;
-		  e.k = expkind.VNONRELOC;
+		  e.k = ExpKind.VNONRELOC;
 		}
 
 
-		public static void LuaKExp2NextReg (FuncState fs, expdesc e) {
+		public static void LuaKExp2NextReg (FuncState fs, ExpDesc e) {
 		  LuaKDischargeVars(fs, e);
 		  FreeExp(fs, e);
 		  LuaKReserveRegs(fs, 1);
@@ -496,9 +496,9 @@ namespace KopiLua
 		}
 
 
-		public static int LuaKExp2AnyReg (FuncState fs, expdesc e) {
+		public static int LuaKExp2AnyReg (FuncState fs, ExpDesc e) {
 		  LuaKDischargeVars(fs, e);
-		  if (e.k == expkind.VNONRELOC) {
+		  if (e.k == ExpKind.VNONRELOC) {
 			if (!HasJumps(e)) return e.u.s.info;  /* exp is already in a register */
 			if (e.u.s.info >= fs.nactvar) {  /* reg. is not a local? */
 			  Exp2Reg(fs, e, e.u.s.info);  /* put value on it */
@@ -510,7 +510,7 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKExp2Val (FuncState fs, expdesc e) {
+		public static void LuaKExp2Val (FuncState fs, ExpDesc e) {
 		  if (HasJumps(e))
 			LuaKExp2AnyReg(fs, e);
 		  else
@@ -518,23 +518,23 @@ namespace KopiLua
 		}
 
 
-		public static int LuaKExp2RK (FuncState fs, expdesc e) {
+		public static int LuaKExp2RK (FuncState fs, ExpDesc e) {
 		  LuaKExp2Val(fs, e);
 		  switch (e.k) {
-			case expkind.VKNUM:
-			case expkind.VTRUE:
-			case expkind.VFALSE:
-			case expkind.VNIL: {
+			case ExpKind.VKNUM:
+			case ExpKind.VTRUE:
+			case ExpKind.VFALSE:
+			case ExpKind.VNIL: {
 			  if (fs.nk <= MAXINDEXRK) {  /* constant fit in RK operand? */
-				e.u.s.info = (e.k == expkind.VNIL)  ? NilK(fs) :
-							  (e.k == expkind.VKNUM) ? LuaKNumberK(fs, e.u.nval) :
-							  BoolValueK(fs, (e.k == expkind.VTRUE) ? 1 : 0);
-				e.k = expkind.VK;
+				e.u.s.info = (e.k == ExpKind.VNIL)  ? NilK(fs) :
+							  (e.k == ExpKind.VKNUM) ? LuaKNumberK(fs, e.u.nval) :
+							  BoolValueK(fs, (e.k == ExpKind.VTRUE) ? 1 : 0);
+				e.k = ExpKind.VK;
 				return RKASK(e.u.s.info);
 			  }
 			  else break;
 			}
-			case expkind.VK: {
+			case ExpKind.VK: {
 			  if (e.u.s.info <= MAXINDEXRK)  /* constant fit in argC? */
 				return RKASK(e.u.s.info);
 			  else break;
@@ -546,24 +546,24 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKStoreVar (FuncState fs, expdesc var, expdesc ex) {
+		public static void LuaKStoreVar (FuncState fs, ExpDesc var, ExpDesc ex) {
 		  switch (var.k) {
-			case expkind.VLOCAL: {
+			case ExpKind.VLOCAL: {
 			  FreeExp(fs, ex);
 			  Exp2Reg(fs, ex, var.u.s.info);
 			  return;
 			}
-			case expkind.VUPVAL: {
+			case ExpKind.VUPVAL: {
 			  int e = LuaKExp2AnyReg(fs, ex);
 			  LuaKCodeABC(fs, OpCode.OP_SETUPVAL, e, var.u.s.info, 0);
 			  break;
 			}
-			case expkind.VGLOBAL: {
+			case ExpKind.VGLOBAL: {
 			  int e = LuaKExp2AnyReg(fs, ex);
 			  LuaKCodeABx(fs, OpCode.OP_SETGLOBAL, e, var.u.s.info);
 			  break;
 			}
-			case expkind.VINDEXED: {
+			case ExpKind.VINDEXED: {
 			  int e = LuaKExp2RK(fs, ex);
 			  LuaKCodeABC(fs, OpCode.OP_SETTABLE, var.u.s.info, var.u.s.aux, e);
 			  break;
@@ -577,7 +577,7 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKSelf (FuncState fs, expdesc e, expdesc key) {
+		public static void LuaKSelf (FuncState fs, ExpDesc e, ExpDesc key) {
 		  int func;
 		  LuaKExp2AnyReg(fs, e);
 		  FreeExp(fs, e);
@@ -586,11 +586,11 @@ namespace KopiLua
 		  LuaKCodeABC(fs, OpCode.OP_SELF, func, e.u.s.info, LuaKExp2RK(fs, key));
 		  FreeExp(fs, key);
 		  e.u.s.info = func;
-		  e.k = expkind.VNONRELOC;
+		  e.k = ExpKind.VNONRELOC;
 		}
 
 
-		private static void InvertJump (FuncState fs, expdesc e) {
+		private static void InvertJump (FuncState fs, ExpDesc e) {
 		  InstructionPtr pc = GetJumpControl(fs, e.u.s.info);
 		  LuaAssert(testTMode(GET_OPCODE(pc[0])) != 0 && GET_OPCODE(pc[0]) != OpCode.OP_TESTSET &&
 												   GET_OPCODE(pc[0]) != OpCode.OP_TEST);
@@ -598,8 +598,8 @@ namespace KopiLua
 		}
 
 
-		private static int JumpOnCond (FuncState fs, expdesc e, int cond) {
-		  if (e.k == expkind.VRELOCABLE) {
+		private static int JumpOnCond (FuncState fs, ExpDesc e, int cond) {
+		  if (e.k == ExpKind.VRELOCABLE) {
 			InstructionPtr ie = GetCode(fs, e);
 			if (GET_OPCODE(ie) == OpCode.OP_NOT) {
 			  fs.pc--;  /* remove previous OpCode.OP_NOT */
@@ -613,15 +613,15 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKGoIfTrue (FuncState fs, expdesc e) {
+		public static void LuaKGoIfTrue (FuncState fs, ExpDesc e) {
 		  int pc;  /* pc of last jump */
 		  LuaKDischargeVars(fs, e);
 		  switch (e.k) {
-			case expkind.VK: case expkind.VKNUM: case expkind.VTRUE: {
+			case ExpKind.VK: case ExpKind.VKNUM: case ExpKind.VTRUE: {
 			  pc = NO_JUMP;  /* always true; do nothing */
 			  break;
 			}
-			case expkind.VJMP: {
+			case ExpKind.VJMP: {
 			  InvertJump(fs, e);
 			  pc = e.u.s.info;
 			  break;
@@ -637,15 +637,15 @@ namespace KopiLua
 		}
 
 
-		private static void LuaKGoIFalse (FuncState fs, expdesc e) {
+		private static void LuaKGoIFalse (FuncState fs, ExpDesc e) {
 		  int pc;  /* pc of last jump */
 		  LuaKDischargeVars(fs, e);
 		  switch (e.k) {
-			case expkind.VNIL: case expkind.VFALSE: {
+			case ExpKind.VNIL: case ExpKind.VFALSE: {
 			  pc = NO_JUMP;  /* always false; do nothing */
 			  break;
 			}
-			case expkind.VJMP: {
+			case ExpKind.VJMP: {
 			  pc = e.u.s.info;
 			  break;
 			}
@@ -660,27 +660,27 @@ namespace KopiLua
 		}
 
 
-		private static void CodeNot (FuncState fs, expdesc e) {
+		private static void CodeNot (FuncState fs, ExpDesc e) {
 		  LuaKDischargeVars(fs, e);
 		  switch (e.k) {
-			case expkind.VNIL: case expkind.VFALSE: {
-				e.k = expkind.VTRUE;
+			case ExpKind.VNIL: case ExpKind.VFALSE: {
+				e.k = ExpKind.VTRUE;
 			  break;
 			}
-			case expkind.VK: case expkind.VKNUM: case expkind.VTRUE: {
-			  e.k = expkind.VFALSE;
+			case ExpKind.VK: case ExpKind.VKNUM: case ExpKind.VTRUE: {
+			  e.k = ExpKind.VFALSE;
 			  break;
 			}
-			case expkind.VJMP: {
+			case ExpKind.VJMP: {
 			  InvertJump(fs, e);
 			  break;
 			}
-			case expkind.VRELOCABLE:
-			case expkind.VNONRELOC: {
+			case ExpKind.VRELOCABLE:
+			case ExpKind.VNONRELOC: {
 			  Discharge2AnyReg(fs, e);
 			  FreeExp(fs, e);
 			  e.u.s.info = LuaKCodeABC(fs, OpCode.OP_NOT, 0, e.u.s.info, 0);
-			  e.k = expkind.VRELOCABLE;
+			  e.k = ExpKind.VRELOCABLE;
 			  break;
 			}
 			default: {
@@ -695,13 +695,13 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKIndexed (FuncState fs, expdesc t, expdesc k) {
+		public static void LuaKIndexed (FuncState fs, ExpDesc t, ExpDesc k) {
 		  t.u.s.aux = LuaKExp2RK(fs, k);
-		  t.k = expkind.VINDEXED;
+		  t.k = ExpKind.VINDEXED;
 		}
 
 
-		private static int ConstFolding (OpCode op, expdesc e1, expdesc e2) {
+		private static int ConstFolding (OpCode op, ExpDesc e1, ExpDesc e2) {
 		  LuaNumberType v1, v2, r;
 		  if ((IsNumeral(e1)==0) || (IsNumeral(e2)==0)) return 0;
 		  v1 = e1.u.nval;
@@ -727,7 +727,7 @@ namespace KopiLua
 		}
 
 
-		private static void CodeArith (FuncState fs, OpCode op, expdesc e1, expdesc e2) {
+		private static void CodeArith (FuncState fs, OpCode op, ExpDesc e1, ExpDesc e2) {
 		  if (ConstFolding(op, e1, e2) != 0)
 			return;
 		  else {
@@ -742,13 +742,13 @@ namespace KopiLua
 			  FreeExp(fs, e1);
 			}
 			e1.u.s.info = LuaKCodeABC(fs, op, 0, o1, o2);
-			e1.k = expkind.VRELOCABLE;
+			e1.k = ExpKind.VRELOCABLE;
 		  }
 		}
 
 
-		private static void CodeComp (FuncState fs, OpCode op, int cond, expdesc e1,
-																  expdesc e2) {
+		private static void CodeComp (FuncState fs, OpCode op, int cond, ExpDesc e1,
+																  ExpDesc e2) {
 		  int o1 = LuaKExp2RK(fs, e1);
 		  int o2 = LuaKExp2RK(fs, e2);
 		  FreeExp(fs, e2);
@@ -759,13 +759,13 @@ namespace KopiLua
 			cond = 1;
 		  }
 		  e1.u.s.info = CondJump(fs, op, cond, o1, o2);
-		  e1.k = expkind.VJMP;
+		  e1.k = ExpKind.VJMP;
 		}
 
 
-		public static void LuaKPrefix (FuncState fs, UnOpr op, expdesc e) {
-		  expdesc e2 = new expdesc();
-		  e2.t = e2.f = NO_JUMP; e2.k = expkind.VKNUM; e2.u.nval = 0;
+		public static void LuaKPrefix (FuncState fs, UnOpr op, ExpDesc e) {
+		  ExpDesc e2 = new ExpDesc();
+		  e2.t = e2.f = NO_JUMP; e2.k = ExpKind.VKNUM; e2.u.nval = 0;
 		  switch (op) {
 			case UnOpr.OPR_MINUS: {
 			  if (IsNumeral(e)==0)
@@ -784,7 +784,7 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKInfix (FuncState fs, BinOpr op, expdesc v) {
+		public static void LuaKInfix (FuncState fs, BinOpr op, ExpDesc v) {
 		  switch (op) {
 			case BinOpr.OPR_AND: {
 			  LuaKGoIfTrue(fs, v);
@@ -811,7 +811,7 @@ namespace KopiLua
 		}
 
 
-		public static void LuaKPosFix (FuncState fs, BinOpr op, expdesc e1, expdesc e2) {
+		public static void LuaKPosFix (FuncState fs, BinOpr op, ExpDesc e1, ExpDesc e2) {
 		  switch (op) {
 			case BinOpr.OPR_AND: {
 			  LuaAssert(e1.t == NO_JUMP);  /* list must be closed */
@@ -829,11 +829,11 @@ namespace KopiLua
 			}
 			case BinOpr.OPR_CONCAT: {
 			  LuaKExp2Val(fs, e2);
-			  if (e2.k == expkind.VRELOCABLE && GET_OPCODE(GetCode(fs, e2)) == OpCode.OP_CONCAT) {
+			  if (e2.k == ExpKind.VRELOCABLE && GET_OPCODE(GetCode(fs, e2)) == OpCode.OP_CONCAT) {
 				LuaAssert(e1.u.s.info == GETARG_B(GetCode(fs, e2))-1);
 				FreeExp(fs, e1);
 				SETARG_B(GetCode(fs, e2), e1.u.s.info);
-				e1.k = expkind.VRELOCABLE; e1.u.s.info = e2.u.s.info;
+				e1.k = ExpKind.VRELOCABLE; e1.u.s.info = e2.u.s.info;
 			  }
 			  else {
 				LuaKExp2NextReg(fs, e2);  /* operand must be on the 'stack' */

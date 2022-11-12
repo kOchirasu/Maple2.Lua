@@ -32,10 +32,10 @@ namespace KopiLua
 
 		public static void luaS_resize (LuaState L, int newsize) {
 		  GCObject[] newhash;
-		  stringtable tb;
+		  StringTable tb;
 		  int i;
 		  if (G(L).gcstate == GCSsweepstring)
-			return;  /* cannot resize during GC traverse */		  
+			return;  /* cannot resize during GC traverse */
 		  newhash = new GCObject[newsize];
 		  AddTotalBytes(L, newsize * GetUnmanagedSize(typeof(GCObjectRef)));
 		  tb = G(L).strt;
@@ -65,7 +65,7 @@ namespace KopiLua
 		public static TString newlstr (LuaState L, CharPtr str, uint l,
 											   uint h) {
 		  TString ts;
-		  stringtable tb;
+		  StringTable tb;
 		  if (l+1 > MAXSIZET /GetUnmanagedSize(typeof(char)))
 		    LuaMTooBig(L);
 		  ts = new TString(new char[l+1]);
@@ -99,7 +99,7 @@ namespace KopiLua
 		  for (o = G(L).strt.hash[lmod(h, G(L).strt.size)];
 			   o != null;
 			   o = o.gch.next) {
-			TString ts = rawgco2ts(o);			
+			TString ts = rawgco2ts(o);
 			if (ts.tsv.len == l && (memcmp(str, GetStr(ts), l) == 0)) {
 			  /* string may be dead */
 			  if (IsDead(G(L), o)) ChangeWhite(o);

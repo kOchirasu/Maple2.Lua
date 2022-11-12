@@ -541,7 +541,7 @@ namespace KopiLua
 
 		private const string number_chars = "0123456789+-eE.";
 		public static double lua_str2number(CharPtr s, out CharPtr end)
-		{			
+		{
 			end = new CharPtr(s.chars, s.index);
 			string str = "";
 			while (end[0] == ' ')
@@ -748,7 +748,7 @@ namespace KopiLua
 
 		public static Stream LuaPopen(LuaState L, CharPtr c, CharPtr m) { LuaLError(L, LUA_QL("popen") + " not supported"); return null; }
 		public static int LuaPClose(LuaState L, Stream file) { return 0; }
-	
+
 		//#endif
 
 		/*
@@ -885,7 +885,7 @@ namespace KopiLua
 				while (true)
 				{
 					// get this char
-					char ch = end[0];					
+					char ch = end[0];
 
 					// which digit is this?
 					int this_digit = 0;
@@ -1030,7 +1030,7 @@ namespace KopiLua
 				//return "MyPath";
 			return null;
 		}
-		
+
 		[CLSCompliantAttribute(false)]
 		public static int memcmp(CharPtr ptr1, CharPtr ptr2, uint size) { return memcmp(ptr1, ptr2, (int)size); }
 		public static int memcmp(CharPtr ptr1, CharPtr ptr2, int size)
@@ -1295,13 +1295,13 @@ namespace KopiLua
 
 		public static Stream fopen(CharPtr filename, CharPtr mode)
 		{
-			string str = filename.ToString();			
+			string str = filename.ToString();
 			FileMode filemode = FileMode.Open;
-			FileAccess fileaccess = (FileAccess)0;			
+			FileAccess fileaccess = (FileAccess)0;
 			for (int i=0; mode[i] != '\0'; i++)
 				switch (mode[i])
 				{
-					case 'r': 
+					case 'r':
 						fileaccess = fileaccess | FileAccess.Read;
 						if (!File.Exists(str))
 							return null;
@@ -1313,7 +1313,7 @@ namespace KopiLua
 					case 'a':
 						filemode = FileMode.Append;
 						fileaccess = fileaccess | FileAccess.Write;
-						break;	
+						break;
 				}
 			try
 			{
@@ -1372,7 +1372,7 @@ namespace KopiLua
 			string str = sb.ToString();
 			return parse_scanf(str, format, argp);
 		}
-		
+
 		public static int fseek(Stream f, long offset, int origin)
 		{
 			try
@@ -1522,9 +1522,9 @@ namespace KopiLua
 				return 40;
 			else if (t == typeof(LHS_assign))
 				return 32;
-			else if (t == typeof(expdesc))
+			else if (t == typeof(ExpDesc))
 				return 24;
-			else if (t == typeof(upvaldesc))
+			else if (t == typeof(UpvalDesc))
 				return 2;
 			else if (t == typeof(BlockCnt))
 				return 12;
@@ -1536,7 +1536,7 @@ namespace KopiLua
 				return 16;
 			else if (t == typeof(MatchState))
 				return 272;
-			else if (t == typeof(stringtable))
+			else if (t == typeof(StringTable))
 				return 12;
 			else if (t == typeof(FilePtr))
 				return 4;
@@ -1553,7 +1553,7 @@ namespace KopiLua
 			else if (t == typeof(Int32))
 				return 4;
 			else if (t == typeof(Single))
-				return 4;			
+				return 4;
 			Debug.Assert(false, "Trying to get unknown sized of unmanaged type " + t.ToString());
 			return 0;
 		}

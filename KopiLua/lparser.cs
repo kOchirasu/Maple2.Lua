@@ -22,7 +22,7 @@ namespace KopiLua
 		** Expression descriptor
 		*/
 
-		public enum expkind {
+		public enum ExpKind {
 		  VVOID,	/* no value */
 		  VNIL,
 		  VTRUE,
@@ -40,11 +40,11 @@ namespace KopiLua
 		  VVARARG	/* info = instruction pc */
 		};
 
-	
 
-		public class expdesc {
 
-			public void Copy(expdesc e)
+		public class ExpDesc {
+
+			public void Copy(ExpDesc e)
 			{
 				this.k = e.k;
 				this.u.Copy(e.u);
@@ -52,7 +52,7 @@ namespace KopiLua
 				this.f = e.f;
 			}
 
-			public expkind k;
+			public ExpKind k;
 
 			[CLSCompliantAttribute(false)]
 			public class _u
@@ -85,7 +85,7 @@ namespace KopiLua
 		};
 
 
-		public class upvaldesc {
+		public class UpvalDesc {
 		  public lu_byte k;
 		  public lu_byte info;
 		};
@@ -96,7 +96,7 @@ namespace KopiLua
 		  public FuncState()
 		  {
 			  for (int i=0; i<this.upvalues.Length; i++)
-				  this.upvalues[i] = new upvaldesc();
+				  this.upvalues[i] = new UpvalDesc();
 		  }
 
 		  public Proto f;  /* current function header */
@@ -113,13 +113,13 @@ namespace KopiLua
 		  public int np;  /* number of elements in `p' */
 		  public short nlocvars;  /* number of elements in `locvars' */
 		  public lu_byte nactvar;  /* number of active local variables */
-		  public upvaldesc[] upvalues = new upvaldesc[LUAI_MAXUPVALUES];  /* upvalues */
+		  public UpvalDesc[] upvalues = new UpvalDesc[LUAI_MAXUPVALUES];  /* upvalues */
           [CLSCompliantAttribute(false)]
 		  public ushort[] actvar = new ushort[LUAI_MAXVARS];  /* declared-variable stack */
 		};
 
 
-		public static int hasmultret(expkind k)		{return ((k) == expkind.VCALL || (k) == expkind.VVARARG) ? 1 : 0;}
+		public static int hasmultret(ExpKind k)		{return ((k) == ExpKind.VCALL || (k) == ExpKind.VVARARG) ? 1 : 0;}
 
 		public static LocVar getlocvar(FuncState fs, int i)	{return fs.f.locvars[fs.actvar[i]];}
 
@@ -207,19 +207,19 @@ namespace KopiLua
 		}
 
 
-		private static void init_exp (expdesc e, expkind k, int i) {
+		private static void init_exp (ExpDesc e, ExpKind k, int i) {
 		  e.f = e.t = NO_JUMP;
 		  e.k = k;
 		  e.u.s.info = i;
 		}
 
 
-		private static void codestring (LexState ls, expdesc e, TString s) {
-			init_exp(e, expkind.VK, LuaKStringK(ls.fs, s));
+		private static void codestring (LexState ls, ExpDesc e, TString s) {
+			init_exp(e, ExpKind.VK, LuaKStringK(ls.fs, s));
 		}
 
 
-		private static void checkname(LexState ls, expdesc e) {
+		private static void checkname(LexState ls, ExpDesc e) {
 		  codestring(ls, e, str_checkname(ls));
 		}
 
@@ -265,7 +265,7 @@ namespace KopiLua
 		}
 
 
-		private static int indexupvalue (FuncState fs, TString name, expdesc v) {
+		private static int indexupvalue (FuncState fs, TString name, ExpDesc v) {
 		  int i;
 		  Proto f = fs.f;
 		  int oldsize = f.sizeupvalues;
@@ -281,7 +281,7 @@ namespace KopiLua
 		  while (oldsize < f.sizeupvalues) f.upvalues[oldsize++] = null;
 		  f.upvalues[f.nups] = name;
 		  LuaCObjBarrier(fs.L, f, name);
-		  LuaAssert(v.k == expkind.VLOCAL || v.k == expkind.VUPVAL);
+		  LuaAssert(v.k == ExpKind.VLOCAL || v.k == ExpKind.VUPVAL);
 		  fs.upvalues[f.nups].k = CastByte(v.k);
 		  fs.upvalues[f.nups].info = CastByte(v.u.s.info);
 		  return f.nups++;
@@ -305,40 +305,40 @@ namespace KopiLua
 		}
 
 
-		private static expkind singlevaraux(FuncState fs, TString n, expdesc var, int base_)
+		private static ExpKind singlevaraux(FuncState fs, TString n, ExpDesc var, int base_)
 		{
 		  if (fs == null) {  /* no more levels? */
-			init_exp(var, expkind.VGLOBAL, NO_REG);  /* default is global variable */
-			return expkind.VGLOBAL;
+			init_exp(var, ExpKind.VGLOBAL, NO_REG);  /* default is global variable */
+			return ExpKind.VGLOBAL;
 		  }
 		  else {
 			int v = searchvar(fs, n);  /* look up at current level */
 			if (v >= 0) {
-			  init_exp(var, expkind.VLOCAL, v);
+			  init_exp(var, ExpKind.VLOCAL, v);
 			  if (base_==0)
 				markupval(fs, v);  /* local will be used as an upval */
-			  return expkind.VLOCAL;
+			  return ExpKind.VLOCAL;
 			}
 			else {  /* not found at current level; try upper one */
-			  if (singlevaraux(fs.prev, n, var, 0) == expkind.VGLOBAL)
-				  return expkind.VGLOBAL;
+			  if (singlevaraux(fs.prev, n, var, 0) == ExpKind.VGLOBAL)
+				  return ExpKind.VGLOBAL;
 			  var.u.s.info = indexupvalue(fs, n, var);  /* else was LOCAL or UPVAL */
-			  var.k = expkind.VUPVAL;  /* upvalue in this level */
-			  return expkind.VUPVAL;
+			  var.k = ExpKind.VUPVAL;  /* upvalue in this level */
+			  return ExpKind.VUPVAL;
 			}
 		  }
 		}
 
 
-		private static void singlevar (LexState ls, expdesc var) {
+		private static void singlevar (LexState ls, ExpDesc var) {
 		  TString varname = str_checkname(ls);
 		  FuncState fs = ls.fs;
-		  if (singlevaraux(fs, varname, var, 1) == expkind.VGLOBAL)
+		  if (singlevaraux(fs, varname, var, 1) == ExpKind.VGLOBAL)
 			var.u.s.info = LuaKStringK(fs, varname);  /* info points to global name */
 		}
 
 
-		private static void adjust_assign (LexState ls, int nvars, int nexps, expdesc e) {
+		private static void adjust_assign (LexState ls, int nvars, int nexps, ExpDesc e) {
 		  FuncState fs = ls.fs;
 		  int extra = nvars - nexps;
 		  if (hasmultret(e.k) != 0) {
@@ -348,7 +348,7 @@ namespace KopiLua
 			if (extra > 1) LuaKReserveRegs(fs, extra-1);
 		  }
 		  else {
-			if (e.k != expkind.VVOID) LuaKExp2NextReg(fs, e);  /* close last expression */
+			if (e.k != ExpKind.VVOID) LuaKExp2NextReg(fs, e);  /* close last expression */
 			if (extra > 0) {
 			  int reg = fs.freereg;
 			  LuaKReserveRegs(fs, extra);
@@ -392,19 +392,19 @@ namespace KopiLua
 		}
 
 
-		private static void pushclosure (LexState ls, FuncState func, expdesc v) {
+		private static void pushclosure (LexState ls, FuncState func, ExpDesc v) {
 		  FuncState fs = ls.fs;
 		  Proto f = fs.f;
 		  int oldsize = f.sizep;
 		  int i;
-		  LuaMGrowVector(ls.L, ref f.p, fs.np, ref f.sizep, 
+		  LuaMGrowVector(ls.L, ref f.p, fs.np, ref f.sizep,
 						  MAXARG_Bx, "constant table overflow");
 		  while (oldsize < f.sizep) f.p[oldsize++] = null;
 		  f.p[fs.np++] = func.f;
 		  LuaCObjBarrier(ls.L, f, func.f);
-		  init_exp(v, expkind.VRELOCABLE, LuaKCodeABx(fs, OpCode.OP_CLOSURE, 0, fs.np - 1));
+		  init_exp(v, ExpKind.VRELOCABLE, LuaKCodeABx(fs, OpCode.OP_CLOSURE, 0, fs.np - 1));
 		  for (i=0; i<func.f.nups; i++) {
-			OpCode o = ((int)func.upvalues[i].k == (int)expkind.VLOCAL) ? OpCode.OP_MOVE : OpCode.OP_GETUPVAL;
+			OpCode o = ((int)func.upvalues[i].k == (int)ExpKind.VLOCAL) ? OpCode.OP_MOVE : OpCode.OP_GETUPVAL;
 			LuaKCodeABC(fs, o, 0, func.upvalues[i].info, 0);
 		  }
 		}
@@ -449,7 +449,7 @@ namespace KopiLua
 		  f.sizelineinfo = fs.pc;
 		  LuaMReallocVector(L, ref f.k, f.sizek, fs.nk/*, TValue*/);
 		  f.sizek = fs.nk;
-		  LuaMReallocVector(L, ref f.p, f.sizep, fs.np/*, Proto*/);		  
+		  LuaMReallocVector(L, ref f.p, f.sizep, fs.np/*, Proto*/);
 		  f.sizep = fs.np;
 		  for (int i = 0; i < f.p.Length; i++)
 		  {
@@ -493,10 +493,10 @@ namespace KopiLua
 		/*============================================================*/
 
 
-		private static void field (LexState ls, expdesc v) {
+		private static void field (LexState ls, ExpDesc v) {
 		  /* field . ['.' | ':'] NAME */
 		  FuncState fs = ls.fs;
-		  expdesc key = new expdesc();
+		  ExpDesc key = new ExpDesc();
 		  LuaKExp2AnyReg(fs, v);
 		  LuaXNext(ls);  /* skip the dot or colon */
 		  checkname(ls, key);
@@ -504,7 +504,7 @@ namespace KopiLua
 		}
 
 
-		private static void yindex (LexState ls, expdesc v) {
+		private static void yindex (LexState ls, ExpDesc v) {
 		  /* index . '[' expr ']' */
 		  LuaXNext(ls);  /* skip the '[' */
 		  expr(ls, v);
@@ -521,8 +521,8 @@ namespace KopiLua
 
 
 		public class ConsControl {
-		  public expdesc v = new expdesc();  /* last list item read */
-		  public expdesc t;  /* table descriptor */
+		  public ExpDesc v = new ExpDesc();  /* last list item read */
+		  public ExpDesc t;  /* table descriptor */
 		  public int nh;  /* total number of `record' elements */
 		  public int na;  /* total number of array elements */
 		  public int tostore;  /* number of array elements pending to be stored */
@@ -533,7 +533,7 @@ namespace KopiLua
 		  /* recfield . (NAME | `['exp1`]') = exp1 */
 		  FuncState fs = ls.fs;
 		  int reg = ls.fs.freereg;
-		  expdesc key = new expdesc(), val = new expdesc();
+		  ExpDesc key = new ExpDesc(), val = new ExpDesc();
 		  int rkkey;
 		  if (ls.t.token == (int)RESERVED.TK_NAME) {
 			luaY_checklimit(fs, cc.nh, MAXINT, "items in a constructor");
@@ -551,9 +551,9 @@ namespace KopiLua
 
 
 		private static void closelistfield (FuncState fs, ConsControl cc) {
-		  if (cc.v.k == expkind.VVOID) return;  /* there is no list item */
+		  if (cc.v.k == ExpKind.VVOID) return;  /* there is no list item */
 		  LuaKExp2NextReg(fs, cc.v);
-		  cc.v.k = expkind.VVOID;
+		  cc.v.k = ExpKind.VVOID;
 		  if (cc.tostore == LFIELDS_PER_FLUSH) {
 			LuaKSetList(fs, cc.t.u.s.info, cc.na, cc.tostore);  /* flush */
 			cc.tostore = 0;  /* no more items pending */
@@ -569,7 +569,7 @@ namespace KopiLua
 			cc.na--;  /* do not count last expression (unknown number of elements) */
 		  }
 		  else {
-			if (cc.v.k != expkind.VVOID)
+			if (cc.v.k != ExpKind.VVOID)
 			  LuaKExp2NextReg(fs, cc.v);
 			LuaKSetList(fs, cc.t.u.s.info, cc.na, cc.tostore);
 		  }
@@ -584,7 +584,7 @@ namespace KopiLua
 		}
 
 
-		private static void constructor (LexState ls, expdesc t) {
+		private static void constructor (LexState ls, ExpDesc t) {
 		  /* constructor . ?? */
 		  FuncState fs = ls.fs;
 		  int line = ls.linenumber;
@@ -592,12 +592,12 @@ namespace KopiLua
 		  ConsControl cc = new ConsControl();
 		  cc.na = cc.nh = cc.tostore = 0;
 		  cc.t = t;
-		  init_exp(t, expkind.VRELOCABLE, pc);
-		  init_exp(cc.v, expkind.VVOID, 0);  /* no value (yet) */
+		  init_exp(t, ExpKind.VRELOCABLE, pc);
+		  init_exp(cc.v, ExpKind.VVOID, 0);  /* no value (yet) */
 		  LuaKExp2NextReg(ls.fs, t);  /* fix it at stack top (for gc) */
 		  checknext(ls, '{');
 		  do {
-			LuaAssert(cc.v.k == expkind.VVOID || cc.tostore > 0);
+			LuaAssert(cc.v.k == ExpKind.VVOID || cc.tostore > 0);
 			if (ls.t.token == '}') break;
 			closelistfield(fs, cc);
 			switch(ls.t.token) {
@@ -662,7 +662,7 @@ namespace KopiLua
 		}
 
 
-		private static void body (LexState ls, expdesc e, int needself, int line) {
+		private static void body (LexState ls, ExpDesc e, int needself, int line) {
 		  /* body .  `(' parlist `)' chunk END */
 		  FuncState new_fs = new FuncState();
 		  open_func(ls, new_fs);
@@ -682,7 +682,7 @@ namespace KopiLua
 		}
 
 
-		private static int explist1 (LexState ls, expdesc v) {
+		private static int explist1 (LexState ls, ExpDesc v) {
 		  /* explist1 . expr { `,' expr } */
 		  int n = 1;  /* at least one expression */
 		  expr(ls, v);
@@ -695,9 +695,9 @@ namespace KopiLua
 		}
 
 
-		private static void funcargs (LexState ls, expdesc f) {
+		private static void funcargs (LexState ls, ExpDesc f) {
 		  FuncState fs = ls.fs;
-		  expdesc args = new expdesc();
+		  ExpDesc args = new ExpDesc();
 		  int base_, nparams;
 		  int line = ls.linenumber;
 		  switch (ls.t.token) {
@@ -706,7 +706,7 @@ namespace KopiLua
 				LuaXSyntaxError(ls,"ambiguous syntax (function call x new statement)");
 			  LuaXNext(ls);
 			  if (ls.t.token == ')')  /* arg list is empty? */
-				args.k = expkind.VVOID;
+				args.k = ExpKind.VVOID;
 			  else {
 				explist1(ls, args);
 				LuaKSetMultRet(fs, args);
@@ -728,16 +728,16 @@ namespace KopiLua
 			  return;
 			}
 		  }
-		  LuaAssert(f.k == expkind.VNONRELOC);
+		  LuaAssert(f.k == ExpKind.VNONRELOC);
 		  base_ = f.u.s.info;  /* base_ register for call */
 		  if (hasmultret(args.k) != 0)
 			nparams = LUA_MULTRET;  /* open call */
 		  else {
-			if (args.k != expkind.VVOID)
+			if (args.k != ExpKind.VVOID)
 			  LuaKExp2NextReg(fs, args);  /* close last argument */
 			nparams = fs.freereg - (base_+1);
 		  }
-		  init_exp(f, expkind.VCALL, LuaKCodeABC(fs, OpCode.OP_CALL, base_, nparams + 1, 2));
+		  init_exp(f, ExpKind.VCALL, LuaKCodeABC(fs, OpCode.OP_CALL, base_, nparams + 1, 2));
 		  LuaKFixLine(fs, line);
 		  fs.freereg = base_+1;  /* call remove function and arguments and leaves
 									(unless changed) one result */
@@ -753,7 +753,7 @@ namespace KopiLua
 		*/
 
 
-		private static void prefixexp (LexState ls, expdesc v) {
+		private static void prefixexp (LexState ls, ExpDesc v) {
 		  /* prefixexp . NAME | '(' expr ')' */
 		  switch (ls.t.token) {
 			case '(': {
@@ -775,7 +775,7 @@ namespace KopiLua
 		  }
 		}
 
-		private static void primaryexp (LexState ls, expdesc v) {
+		private static void primaryexp (LexState ls, ExpDesc v) {
 		  /* primaryexp .
 				prefixexp { `.' NAME | `[' exp `]' | `:' NAME funcargs | funcargs } */
 		  FuncState fs = ls.fs;
@@ -787,14 +787,14 @@ namespace KopiLua
 				break;
 			  }
 			  case '[': {  /* `[' exp1 `]' */
-				expdesc key = new expdesc();
+				ExpDesc key = new ExpDesc();
 				LuaKExp2AnyReg(fs, v);
 				yindex(ls, key);
 				LuaKIndexed(fs, v, key);
 				break;
 			  }
 			  case ':': {  /* `:' NAME funcargs */
-				expdesc key = new expdesc();
+				ExpDesc key = new ExpDesc();
 				LuaXNext(ls);
 				checkname(ls, key);
 				LuaKSelf(fs, v, key);
@@ -812,12 +812,12 @@ namespace KopiLua
 		}
 
 
-		private static void simpleexp (LexState ls, expdesc v) {
+		private static void simpleexp (LexState ls, ExpDesc v) {
 		  /* simpleexp . NUMBER | STRING | NIL | true | false | ... |
 						  constructor | FUNCTION body | primaryexp */
 		  switch (ls.t.token) {
 			case (int)RESERVED.TK_NUMBER: {
-			  init_exp(v, expkind.VKNUM, 0);
+			  init_exp(v, ExpKind.VKNUM, 0);
 			  v.u.nval = ls.t.seminfo.r;
 			  break;
 			}
@@ -826,15 +826,15 @@ namespace KopiLua
 			  break;
 			}
 			case (int)RESERVED.TK_NIL: {
-			  init_exp(v, expkind.VNIL, 0);
+			  init_exp(v, ExpKind.VNIL, 0);
 			  break;
 			}
 			case (int)RESERVED.TK_TRUE: {
-			  init_exp(v, expkind.VTRUE, 0);
+			  init_exp(v, ExpKind.VTRUE, 0);
 			  break;
 			}
 			case (int)RESERVED.TK_FALSE: {
-			  init_exp(v, expkind.VFALSE, 0);
+			  init_exp(v, ExpKind.VFALSE, 0);
 			  break;
 			}
 			case (int)RESERVED.TK_DOTS: {  /* vararg */
@@ -842,7 +842,7 @@ namespace KopiLua
 			  check_condition(ls, fs.f.is_vararg!=0,
 							  "cannot use " + LUA_QL("...") + " outside a vararg function");
 			  fs.f.is_vararg &= unchecked((lu_byte)(~VARARG_NEEDSARG));  /* don't need 'arg' */
-			  init_exp(v, expkind.VVARARG, LuaKCodeABC(fs, OpCode.OP_VARARG, 0, 1, 0));
+			  init_exp(v, ExpKind.VVARARG, LuaKCodeABC(fs, OpCode.OP_VARARG, 0, 1, 0));
 			  break;
 			}
 			case '{': {  /* constructor */
@@ -904,7 +904,7 @@ namespace KopiLua
 
 			public lu_byte left;  /* left priority for each binary operator */
 			public lu_byte right; /* right priority */
-		} 
+		}
 
 		private static priority_[] priority = {  /* ORDER OPR */
 
@@ -936,7 +936,7 @@ namespace KopiLua
 		** subexpr . (simpleexp | unop subexpr) { binop subexpr }
 		** where `binop' is any binary operator with a priority higher than `limit'
 		*/
-		private static BinOpr subexpr (LexState ls, expdesc v, uint limit) {
+		private static BinOpr subexpr (LexState ls, ExpDesc v, uint limit) {
 		  BinOpr op = new BinOpr();
 		  UnOpr uop = new UnOpr();
 		  enterlevel(ls);
@@ -951,7 +951,7 @@ namespace KopiLua
 		  op = getbinopr(ls.t.token);
 		  while (op != BinOpr.OPR_NOBINOPR && priority[(int)op].left > limit)
 		  {
-			expdesc v2 = new expdesc();
+			ExpDesc v2 = new ExpDesc();
 			BinOpr nextop;
 			LuaXNext(ls);
 			LuaKInfix(ls.fs, op, v);
@@ -965,7 +965,7 @@ namespace KopiLua
 		}
 
 
-		private static void expr (LexState ls, expdesc v) {
+		private static void expr (LexState ls, ExpDesc v) {
 		  subexpr(ls, v, 0);
 		}
 
@@ -1007,7 +1007,7 @@ namespace KopiLua
 		*/
 		public class LHS_assign {
 		  public LHS_assign prev;
-		  public expdesc v = new expdesc();  /* variable (global, local, upvalue, or indexed) */
+		  public ExpDesc v = new ExpDesc();  /* variable (global, local, upvalue, or indexed) */
 		};
 
 
@@ -1017,12 +1017,12 @@ namespace KopiLua
 		** local value in a safe place and use this safe copy in the previous
 		** assignment.
 		*/
-		private static void check_conflict (LexState ls, LHS_assign lh, expdesc v) {
+		private static void check_conflict (LexState ls, LHS_assign lh, ExpDesc v) {
 		  FuncState fs = ls.fs;
 		  int extra = fs.freereg;  /* eventual position to save local variable */
 		  int conflict = 0;
 		  for (; lh!=null; lh = lh.prev) {
-			if (lh.v.k == expkind.VINDEXED) {
+			if (lh.v.k == ExpKind.VINDEXED) {
 			  if (lh.v.u.s.info == v.u.s.info) {  /* conflict? */
 				conflict = 1;
 				lh.v.u.s.info = extra;  /* previous assignment will use safe copy */
@@ -1041,14 +1041,14 @@ namespace KopiLua
 
 
 		private static void assignment (LexState ls, LHS_assign lh, int nvars) {
-		  expdesc e = new expdesc();
-		  check_condition(ls, expkind.VLOCAL <= lh.v.k && lh.v.k <= expkind.VINDEXED,
+		  ExpDesc e = new ExpDesc();
+		  check_condition(ls, ExpKind.VLOCAL <= lh.v.k && lh.v.k <= ExpKind.VINDEXED,
 							  "syntax error");
 		  if (testnext(ls, ',') != 0) {  /* assignment . `,' primaryexp assignment */
 			LHS_assign nv = new LHS_assign();
 			nv.prev = lh;
 			primaryexp(ls, nv.v);
-			if (nv.v.k == expkind.VLOCAL)
+			if (nv.v.k == ExpKind.VLOCAL)
 			  check_conflict(ls, lh, nv.v);
 			luaY_checklimit(ls.fs, nvars, LUAI_MAXCCALLS - ls.L.nCcalls,
 							"variables in assignment");
@@ -1069,16 +1069,16 @@ namespace KopiLua
 			  return;  /* avoid default */
 			}
 		  }
-		  init_exp(e, expkind.VNONRELOC, ls.fs.freereg - 1);  /* default assignment */
+		  init_exp(e, ExpKind.VNONRELOC, ls.fs.freereg - 1);  /* default assignment */
 		  LuaKStoreVar(ls.fs, lh.v, e);
 		}
 
 
 		private static int cond (LexState ls) {
 		  /* cond . exp */
-		  expdesc v = new expdesc();
+		  ExpDesc v = new ExpDesc();
 		  expr(ls, v);  /* read condition */
-		  if (v.k == expkind.VNIL) v.k = expkind.VFALSE;  /* `falses' are all equal here */
+		  if (v.k == ExpKind.VNIL) v.k = ExpKind.VFALSE;  /* `falses' are all equal here */
 		  LuaKGoIfTrue(ls.fs, v);
 		  return v.f;
 		}
@@ -1146,7 +1146,7 @@ namespace KopiLua
 
 
 		private static int exp1 (LexState ls) {
-		  expdesc e = new expdesc();
+		  ExpDesc e = new ExpDesc();
 		  int k;
 		  expr(ls, e);
 		  k = (int)e.k;
@@ -1201,7 +1201,7 @@ namespace KopiLua
 		private static void forlist (LexState ls, TString indexname) {
 		  /* forlist . NAME {,NAME} IN explist1 forbody */
 		  FuncState fs = ls.fs;
-		  expdesc e = new expdesc();
+		  ExpDesc e = new ExpDesc();
 		  int nvars = 0;
 		  int line;
 		  int base_ = fs.freereg;
@@ -1278,10 +1278,10 @@ namespace KopiLua
 
 
 		private static void localfunc (LexState ls) {
-		  expdesc v = new expdesc(), b = new expdesc();
+		  ExpDesc v = new ExpDesc(), b = new ExpDesc();
 		  FuncState fs = ls.fs;
 		  new_localvar(ls, str_checkname(ls), 0);
-		  init_exp(v, expkind.VLOCAL, fs.freereg);
+		  init_exp(v, ExpKind.VLOCAL, fs.freereg);
 		  LuaKReserveRegs(fs, 1);
 		  adjustlocalvars(ls, 1);
 		  body(ls, b, 0, ls.linenumber);
@@ -1295,14 +1295,14 @@ namespace KopiLua
 		  /* stat . LOCAL NAME {`,' NAME} [`=' explist1] */
 		  int nvars = 0;
 		  int nexps;
-		  expdesc e = new expdesc();
+		  ExpDesc e = new ExpDesc();
 		  do {
 			new_localvar(ls, str_checkname(ls), nvars++);
 		  } while (testnext(ls, ',') != 0);
 		  if (testnext(ls, '=') != 0)
 			nexps = explist1(ls, e);
 		  else {
-			e.k = expkind.VVOID;
+			e.k = ExpKind.VVOID;
 			nexps = 0;
 		  }
 		  adjust_assign(ls, nvars, nexps, e);
@@ -1310,7 +1310,7 @@ namespace KopiLua
 		}
 
 
-		private static int funcname (LexState ls, expdesc v) {
+		private static int funcname (LexState ls, ExpDesc v) {
 		  /* funcname . NAME {field} [`:' NAME] */
 		  int needself = 0;
 		  singlevar(ls, v);
@@ -1327,7 +1327,7 @@ namespace KopiLua
 		private static void funcstat (LexState ls, int line) {
 		  /* funcstat . FUNCTION funcname body */
 		  int needself;
-		  expdesc v = new expdesc(), b = new expdesc();
+		  ExpDesc v = new ExpDesc(), b = new ExpDesc();
 		  LuaXNext(ls);  /* skip FUNCTION */
 		  needself = funcname(ls, v);
 		  body(ls, b, needself, line);
@@ -1341,7 +1341,7 @@ namespace KopiLua
 		  FuncState fs = ls.fs;
 		  LHS_assign v = new LHS_assign();
 		  primaryexp(ls, v.v);
-		  if (v.v.k == expkind.VCALL)  /* stat . func */
+		  if (v.v.k == ExpKind.VCALL)  /* stat . func */
 			SETARG_C(GetCode(fs, v.v), 1);  /* call statement uses no results */
 		  else {  /* stat . assignment */
 			v.prev = null;
@@ -1353,7 +1353,7 @@ namespace KopiLua
 		private static void retstat (LexState ls) {
 		  /* stat . RETURN explist */
 		  FuncState fs = ls.fs;
-		  expdesc e = new expdesc();
+		  ExpDesc e = new ExpDesc();
 		  int first, nret;  /* registers with returned values */
 		  LuaXNext(ls);  /* skip RETURN */
 		  if ((block_follow(ls.t.token)!=0) || ls.t.token == ';')
@@ -1362,7 +1362,7 @@ namespace KopiLua
 			nret = explist1(ls, e);  /* optional return values */
 			if (hasmultret(e.k) != 0) {
 			  LuaKSetMultRet(fs, e);
-			  if (e.k == expkind.VCALL && nret == 1) {  /* tail call? */
+			  if (e.k == ExpKind.VCALL && nret == 1) {  /* tail call? */
 				SET_OPCODE(GetCode(fs,e), OpCode.OP_TAILCALL);
 				LuaAssert(GETARG_A(GetCode(fs,e)) == fs.nactvar);
 			  }

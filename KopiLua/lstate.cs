@@ -39,7 +39,7 @@ namespace KopiLua
 
 
 
-		public class stringtable {
+		public class StringTable {
 			public GCObject[] hash;
 			public lu_int32 nuse;  /* number of elements */
 			public int size;
@@ -148,7 +148,7 @@ namespace KopiLua
 		** `global state', shared by all threads of this state
 		*/
 		public class GlobalState {
-		  public stringtable strt = new stringtable(); /* hash table for strings */
+		  public StringTable strt = new StringTable(); /* hash table for strings */
 		  public lua_Alloc frealloc;  /* function to reallocate memory */
 		  public object ud;         /* auxiliary data to `frealloc' */
 		  public lu_byte currentwhite;
