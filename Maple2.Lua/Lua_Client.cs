@@ -289,7 +289,6 @@ public partial class Lua {
     [GlobalFunction(Name = "calcEnchantExpGainExpNew")]
     public partial int CalcEnchantExpGainExpNew(ushort levelLimit, int grade, int a2, int type);
 
-    // a3 = option_diff[3] related...
     [GlobalFunction(Name = "calcItemLevel")]
     public partial (int, int) CalcItemLevel(float gearScore, int grade, int type, int enchantLevel, int limitBreakLevel);
 
