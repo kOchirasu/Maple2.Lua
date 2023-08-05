@@ -291,7 +291,7 @@ public partial class Lua {
 
     // a3 = option_diff[3] related...
     [GlobalFunction(Name = "calcItemLevel")]
-    public partial (int, int) CalcItemLevel(float gearScore, int grade, int type, int a3, int levelLimit);
+    public partial (int, int) CalcItemLevel(float gearScore, int grade, int type, int enchantLevel, int limitBreakLevel);
 
     [GlobalFunction(Name = "calcOHItemAdditionalLevel")]
     public partial (int, int) CalcOHItemAdditionalLevel(int a0, int a1, int a2, int a3);
