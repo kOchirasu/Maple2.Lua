@@ -281,13 +281,11 @@ public partial class Lua {
     [GlobalFunction(Name = "calcGatheringActionCount")]
     public partial long CalcGatheringActionCount(float a0, int a1, int a2, int a3, int a4);
 
-    // a2 = option_diff[3] related...
     [GlobalFunction(Name = "calcEnchantExpGainExp")]
-    public partial int CalcEnchantExpGainExp(ushort levelLimit, int grade, int a2, int type);
+    public partial int CalcEnchantExpGainExp(ushort levelLimit, int grade, int enchantLevel, int type);
 
-    // a2 = option_diff[3] related...
     [GlobalFunction(Name = "calcEnchantExpGainExpNew")]
-    public partial int CalcEnchantExpGainExpNew(ushort levelLimit, int grade, int a2, int type);
+    public partial int CalcEnchantExpGainExpNew(ushort levelLimit, int grade, int enchantLevel, int type);
 
     [GlobalFunction(Name = "calcItemLevel")]
     public partial (int, int) CalcItemLevel(float gearScore, int grade, int type, int enchantLevel, int limitBreakLevel);
