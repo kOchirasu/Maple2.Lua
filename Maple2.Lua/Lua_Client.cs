@@ -266,17 +266,17 @@ public partial class Lua {
     [GlobalFunction(Name = "calcCraftReceipeRequireItemCount")]
     public partial long CalcCraftRecipeRequireItemCount(int a0, int a1, int a2);
 
-    // a0 = X+100 or X+104
-    // a1 = X+100
-    // a2 = X+104 or X+100
-    // a3 = 1
+    /// <param name="currentCount">Current count of successful gathers</param>
+    /// <param name="highPropLimitCount">Value in /table/masteryreceipe.xml</param>
+    /// <param name="normalPropLimitCount">Value in /table/masteryreceipe.xml</param>
+    /// <param name="notAutoGather">Bool. If player has auto gathering badge.</param>
     [GlobalFunction(Name = "calcGatheringObjectgSuccessProp")]
-    public partial float CalcGatheringObjectSuccessRate(int a0, int a1, int a2, int a3 = 1);
+    public partial float CalcGatheringObjectSuccessRate(int currentCount, int highPropLimitCount, int normalPropLimitCount, int notAutoGather = 1);
 
-    // a0 = X+100 unknown
-    // a1 = X+104 unknown
+    /// <param name="highPropLimitCount">Value in /table/masteryreceipe.xml</param>
+    /// <param name="normalPropLimitCount">Value in /table/masteryreceipe.xml</param>
     [GlobalFunction(Name = "calcGatheringObjectgMaxCount")]
-    public partial long CalcGatheringObjectMaxCount(int a0, int a1);
+    public partial long CalcGatheringObjectMaxCount(int highPropLimitCount, int normalPropLimitCount);
 
     [GlobalFunction(Name = "calcGatheringActionCount")]
     public partial long CalcGatheringActionCount(float a0, int a1, int a2, int a3, int a4);
