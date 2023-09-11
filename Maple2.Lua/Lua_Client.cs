@@ -269,9 +269,9 @@ public partial class Lua {
     /// <param name="currentCount">Current count of successful gathers</param>
     /// <param name="highPropLimitCount">Value in /table/masteryreceipe.xml</param>
     /// <param name="normalPropLimitCount">Value in /table/masteryreceipe.xml</param>
-    /// <param name="notAutoGather">Bool. If player has auto gathering badge.</param>
+    /// <param name="someoneElsesHome">Bool. If player is in someone else's home.</param>
     [GlobalFunction(Name = "calcGatheringObjectgSuccessProp")]
-    public partial float CalcGatheringObjectSuccessRate(int currentCount, int highPropLimitCount, int normalPropLimitCount, int notAutoGather = 1);
+    public partial float CalcGatheringObjectSuccessRate(int currentCount, int highPropLimitCount, int normalPropLimitCount, int someoneElsesHome = 1);
 
     /// <param name="highPropLimitCount">Value in /table/masteryreceipe.xml</param>
     /// <param name="normalPropLimitCount">Value in /table/masteryreceipe.xml</param>
