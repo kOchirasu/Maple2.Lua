@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <!-- Use following lines to write the generated files to disk. -->
         <EmitCompilerGeneratedFiles Condition=" '$(Configuration)' == 'Debug' ">true</EmitCompilerGeneratedFiles>
-        <PackageVersion>2.0.0</PackageVersion>
+        <PackageVersion>2.0.1</PackageVersion>
         <LangVersion>11</LangVersion>
     </PropertyGroup>
 
