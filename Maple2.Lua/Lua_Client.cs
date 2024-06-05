@@ -169,7 +169,7 @@ public partial class Lua {
     /// <param name="distance">number of maps to traverse</param>
     /// <param name="level">player level</param>
     /// <returns>taxi charge</returns>
-    [GlobalFunction(Name = "calcTaxiCost")]
+    [GlobalFunction(Name = "calcTaxiCharge")]
     public partial int CalcTaxiCharge(int distance, ushort level);
 
     /// <param name="level">player level</param>
